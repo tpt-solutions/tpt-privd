@@ -1,0 +1,180 @@
+# tpt-privd — Design Spec
+
+**Working title only** — not a reserved or confirmed repo name.
+**Type:** new standalone repo
+**License:** MIT OR Apache-2.0 (dual, per house policy)
+**Status:** proposed, unvalidated
+
+## Problem
+
+Any system that manages host-level state (network config, filesystem
+changes, service restarts) faces the same tension: the process handling
+user requests or reconciliation logic should not itself run with root or
+elevated capabilities, but *something* has to actually make the privileged
+change. OPNsense solves this with `configd` — an unprivileged web UI sends
+structured commands to a privileged daemon that is the only thing allowed
+to touch the network.
+
+This pattern is not specific to a firewall. It recurs, unaddressed as a
+shared primitive, across multiple existing safety-critical control repos in
+the portfolio: `tpt-basestation`, `tpt-servo`, `tpt-relay`, `tpt-conductor`,
+`tpt-dynamo`. Each of these plausibly needs some version of "unprivileged
+control surface, privileged execution, audited, bounded blast radius" and,
+as far as this session's review went, none of them expose it as something
+another repo could simply depend on.
+
+## Why a standalone repo, not a crate
+
+Because the value is in being shared across several otherwise-unrelated
+control-system repos, not just this firewall project. Building it once,
+generically, and letting each consumer layer domain-specific command types
+on top is the same "shared plumbing" logic already applied to
+`tpt-quorum` (coordination) and `tpt-ferry` (storage) elsewhere in the
+Atlas.
+
+## Scope
+
+**In scope:**
+- A privileged daemon listening on a local Unix domain socket (or vsock, in
+  VM contexts).
+- A typed, versioned command envelope and the transport for it.
+- Per-command-type policy checks bounding what an unprivileged caller can
+  actually cause to happen.
+- An append-only, tamper-evident audit log of every command and its result.
+- Capability-dropping on daemon start: begin privileged, immediately reduce
+  to the minimum capability set the daemon's role requires (e.g.
+  `CAP_NET_ADMIN` only for a network-facing consumer), rather than running
+  as root indefinitely.
+
+**Explicitly out of scope:**
+- Any specific command vocabulary (firewall rules, GPIO pins, whatever) —
+  this repo defines the generic `Command`/`CommandResult` envelope and
+  transport; domain-specific command types are layered on top by each
+  consumer, in that consumer's own repo.
+- Deciding *what* commands to send — that's the caller's reconciliation
+  logic (e.g. `tpt-bastion`'s provider, or `tpt-netctl`'s caller).
+
+## Architecture
+
+```rust
+struct Command {
+    id: CommandId,
+    version: u32,
+    kind: CommandKind,     // extensible enum, consumer-defined variants
+    payload: Vec<u8>,      // serialized per-kind, see wire format below
+}
+
+struct CommandResult {
+    id: CommandId,
+    outcome: Result<CommandSuccess, CommandError>,
+    audit_ref: AuditLogRef,
+}
+
+trait CommandExecutor {
+    fn policy_check(&self, cmd: &Command) -> Result<(), PolicyViolation>;
+    fn execute(&self, cmd: &Command) -> CommandResult;
+}
+```
+
+- **Wire format.** A strong candidate is reusing `tpt-proto` or
+  `tpt-proto20` (already in the portfolio as clean-room protobuf-shaped
+  systems) rather than introducing a third serialization scheme. Read both
+  directly before deciding, since their scope and maturity differ and one
+  may fit better than the other.
+- **Privilege model.** The daemon starts as root (or with the specific
+  capabilities its role needs), then drops immediately using
+  `tpt-linux-sandbox`'s existing Landlock/seccomp/namespace/capability
+  primitives — this repo should consume that one directly rather than
+  reimplement capability-dropping.
+- **Policy checks are per command type**, not global — e.g. "may only
+  modify nft table X," "may only bind ports in range Y." This bounds the
+  damage a compromised unprivileged caller can do even with full access to
+  the socket.
+- **Audit log.** Every command and result is appended, tamper-evidently.
+  `tpt-citadel`'s cryptographic signing/audit-chain pattern (already in the
+  portfolio: zero-trust secrets vault with a "cryptographically signed"
+  audit trail per its description) is a plausible fit to reuse rather than
+  build a second audit-log implementation — read it directly before
+  committing to a design here.
+- **Execution semantics.** Synchronous, with structured success/failure per
+  command — both `tpt-bastion`'s plan/apply cycle and `tpt-netctl`'s
+  `validate`/`apply` need real pass/fail feedback, not fire-and-forget.
+
+## Internal dependencies to check before writing code
+
+- `tpt-linux-sandbox` — capability dropping, seccomp, namespaces.
+- `tpt-proto` and `tpt-proto20` — candidate wire formats.
+- `tpt-citadel` — candidate audit-log/signing pattern.
+
+## Open questions
+
+- **Long-running commands.** A command that takes real time (e.g. applying
+  a large ruleset via `tpt-netctl`) may not fit a synchronous request/reply
+  model well. Don't design a job/ticket async model speculatively — wait
+  until `tpt-netctl`'s actual apply latency is measured, then decide.
+- **Multi-consumer daemon vs. one daemon per consumer.** Does one `privd`
+  instance serve multiple unprivileged callers (firewall UI, some other
+  control system) with per-caller policy scoping, or does each consumer run
+  its own instance? The "shared plumbing" framing above leans toward one
+  daemon design usable by many, but the operational model needs deciding
+  before the socket/auth model is finalized.
+- **Local vs. remote.** Is this always same-host (Unix socket), or does an
+  HA pair (see `tpt-quorum`) need a remote-capable variant? Decide once
+  `tpt-quorum`'s 2-node failover design is settled, since that determines
+  whether the standby node needs to issue commands to the active node's
+  `privd` or has its own.
+
+## Resolved decisions (2026-09-24)
+
+Before implementation started, the repos this spec assumed as reusable
+dependencies were checked directly. Two did not resolve as expected:
+
+- `tpt-proto` and `tpt-proto20` **do not exist** anywhere in the
+  portfolio. The closest name, `tpt-protocol`, is a real but unrelated
+  industrial protocol-translation suite (Modbus/BACnet/DNP3/HL7/KNX), not
+  a generic command-envelope wire format. This reference was stale.
+- `tpt-citadel`'s audit crate is explicitly "Phase 0/1": an **unsigned**,
+  **in-memory only** SHA-256 hash chain, with no signing primitive
+  anywhere in that repo. It does not deliver the "cryptographically
+  signed" audit trail this spec assumed.
+- None of the named consumer repos (`tpt-servo`, `tpt-relay`,
+  `tpt-conductor`, `tpt-dynamo`, `tpt-bastion`) exist yet. `tpt-netctl`
+  exists only as an unimplemented spec + todo.md. `tpt-basestation`
+  exists and is active but is a hardware/serial flashing tool with no
+  privileged host-OS operations — not actually a fit. `tpt-privd` is
+  therefore being built with no real consumer to integrate against yet.
+- `tpt-linux-sandbox`, by contrast, checked out as real and directly
+  reusable: its `tpt-l-sandbox::Sandbox` builder
+  (`crates/tpt-l-sandbox/src/lib.rs:77-133`) exposes `.caps()`,
+  `.seccomp()`, `.landlock()`, `.namespaces()`, `.apply()` — exactly the
+  capability-dropping primitives this spec wanted, as a path dependency.
+
+Decisions made in light of the above:
+
+1. **Wire format:** self-contained `serde` + CBOR envelope built directly
+   in `tpt-privd` (mirrors the CBOR+JSON dual-codec pattern already used
+   in `tpt-protocol-tup`, for portfolio consistency). No dependency on
+   `tpt-protocol` or any nonexistent `tpt-proto*` crate.
+2. **Audit log:** self-contained, append-only, file-backed,
+   Ed25519-signed hash-chain audit log built directly in `tpt-privd`. No
+   dependency on `tpt-citadel`'s immature audit crate.
+3. **Scope:** build the generic library + daemon as originally scoped,
+   proven out with a minimal mock/example consumer and tests — not
+   co-designed against any specific real consumer, since none exist yet.
+4. **Capability dropping:** depend on `tpt-linux-sandbox` (path
+   dependency) directly, per the original plan — do not reimplement.
+5. **Repo name:** `tpt-privd` confirmed as final, no longer just a
+   working title.
+6. **License:** dual MIT OR Apache-2.0, copyright holder "TPT Solutions".
+7. **Transport:** Unix domain socket only for v1; vsock/remote deferred
+   per the open question above (still gated on `tpt-quorum`, which also
+   does not exist yet).
+8. **Concurrency model:** synchronous request/reply only, per the
+   long-running-commands open question above — no speculative async
+   job/ticket model until a real consumer's measured apply latency
+   requires it.
+9. **Multi-consumer vs. one-daemon-per-consumer:** build the
+   single-daemon, single-caller-per-socket case first, but shape
+   `CommandExecutor`/policy traits so per-caller scoping can be added
+   later without a rewrite. Full multi-tenant auth model deferred until a
+   second real consumer exists to validate against.
