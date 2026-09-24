@@ -1,0 +1,39 @@
+[package]
+name = "tpt-privd-audit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Append-only, Ed25519-signed, hash-chained audit log for tpt-privd"
+keywords = ["privd", "audit", "hash-chain", "ed25519", "tamper-evident"]
+categories = ["cryptography", "filesystem"]
+readme = "README.md"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[lints]
+workspace = true
+
+[dependencies]
+tpt-privd-envelope.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+sha2.workspace = true
+ed25519-dalek.workspace = true
+rand.workspace = true
+hex.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "chain"
+harness = false

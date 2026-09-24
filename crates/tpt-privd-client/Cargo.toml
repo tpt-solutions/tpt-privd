@@ -1,0 +1,26 @@
+[package]
+name = "tpt-privd-client"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Client library for sending commands to a tpt-privd daemon"
+keywords = ["privd", "client", "ipc", "unix"]
+categories = ["network-programming", "os"]
+readme = "README.md"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[lints]
+workspace = true
+
+[dependencies]
+tpt-privd-envelope.workspace = true
+tpt-privd-transport.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]

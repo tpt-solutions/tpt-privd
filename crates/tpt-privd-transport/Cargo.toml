@@ -1,0 +1,34 @@
+[package]
+name = "tpt-privd-transport"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Length-prefixed CBOR framing and Unix domain socket transport for tpt-privd"
+keywords = ["privd", "transport", "unix", "socket", "ipc"]
+categories = ["network-programming", "os"]
+readme = "README.md"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[lints]
+workspace = true
+
+[dependencies]
+tpt-privd-envelope.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+
+[target.'cfg(unix)'.dependencies]
+libc.workspace = true
+
+[dev-dependencies]
+criterion.workspace = true
+
+[[bench]]
+name = "frame"
+harness = false

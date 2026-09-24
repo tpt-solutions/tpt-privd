@@ -1,0 +1,56 @@
+# tpt-privd-daemon example configuration.
+# Copy to /etc/tpt-privd/config.toml and adjust. Validate with:
+#   tpt-privd-daemon --check --config /etc/tpt-privd/config.toml
+
+# Filesystem path of the listening Unix domain socket.
+# Parent directory is created if missing; mode/owner below apply to the socket file.
+socket_path = "/run/tpt-privd/privd.sock"
+
+# Socket file permission bits. TOML has no octal literals — either store the
+# decimal value of the octal mode (432 == 0o660) or a string ("0o660" / "0660").
+socket_mode = "0o660"
+
+# Optional: chown the socket to a specific uid/gid at bind time (requires
+# privilege before the capability drop). Leave unset to keep the binder as owner.
+# socket_owner_uid = 0
+# socket_owner_gid = 0
+
+# I1: inherit a systemd socket-activated listener (LISTEN_FDS) instead of
+# binding. Start via `tpt-privd.socket`; SocketMode=/SocketUser= own the path.
+# socket_activation = false
+
+# Append-only JSONL audit log and Ed25519 signing key (auto-generated 0600 on first run).
+audit_log_path = "/var/lib/tpt-privd/audit.jsonl"
+audit_key_path = "/var/lib/tpt-privd/audit.key"
+
+# Allowlisted custom CommandKind values for the MockExecutor demo stand-in.
+# Real consumers replace this with their own policy configuration.
+# CommandKind::CUSTOM_START = 0x8000_0000 = 2147483648
+# Built-ins: NOP=0, ECHO=1, METRICS=2 (Prometheus text over the audited channel).
+allowed_custom_kinds = [2147483649]
+
+[caps]
+# Drop every capability except those in `keep` before accepting connections.
+drop_all = true
+# Example role matching the design spec's illustration. Prefer the empty set
+# ([]) for a mock that only handles NOP/ECHO/METRICS.
+keep = ["CAP_NET_ADMIN"]
+
+[seccomp]
+# I2 (experimental): optional Linux seccomp filter applied AFTER caps.
+# Default-deny: `allow` must be non-empty when enabled or `--check` fails.
+# A wrong allowlist kills the process with SIGSYS — prefer on_deny = "errno"
+# while bring-up-testing. Off by default.
+enabled = false
+allow = []
+on_deny = "kill"
+
+[limits]
+# Maximum CBOR frame payload in bytes (rejected before allocation).
+max_frame_size = 1048576
+# Per-connection read/write timeouts in milliseconds (must be > 0).
+read_timeout_ms = 5000
+write_timeout_ms = 5000
+# Soft deadline for policy+execute on one connection (must be > 0).
+# Overruns are logged; connection budget = read + write + execute.
+execute_timeout_ms = 30000

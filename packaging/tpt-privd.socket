@@ -1,0 +1,15 @@
+[Unit]
+Description=TPT privileged command daemon socket
+Documentation=https://github.com/TPT-Solutions/tpt-privd
+Before=sockets.target
+
+[Socket]
+ListenStream=/run/tpt-privd/privd.sock
+SocketUser=root
+SocketGroup=tpt-privd
+# Decimal 0o660 = 432; SocketMode takes an octal-looking mode string.
+SocketMode=0660
+RemoveOnStop=yes
+
+[Install]
+WantedBy=sockets.target

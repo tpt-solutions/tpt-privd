@@ -1,0 +1,38 @@
+# cargo-deny configuration.
+# Keeps third-party license usage auditable and consistent with the
+# MIT / Apache-2.0 dual-license policy of tpt-privd.
+
+[advisories]
+version = 2
+yanked = "warn"
+ignore = []
+
+[licenses]
+version = 2
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "Unicode-DFS-2016",
+    "Unicode-3.0",
+    "Zlib",
+    "CC0-1.0",
+]
+confidence-threshold = 0.8
+
+[bans]
+multiple-versions = "warn"
+# `warn` rather than `deny`: the sibling path dependency tpt-linux-sandbox
+# declares its internal crates as path-only workspace deps (no version),
+# which cargo-deny classifies as wildcards. We do not control that repo's
+# manifests, and a path dep cannot smuggle a crates.io version anyway.
+# Our own crates always pin versions explicitly.
+wildcards = "warn"
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]

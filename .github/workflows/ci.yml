@@ -1,0 +1,153 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+env:
+  CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: tpt-privd
+      # tpt-privd depends on tpt-linux-sandbox via a sibling path
+      # dependency (crates/tpt-privd-daemon). Check it out next to us so
+      # the path resolves the same way it does on a developer machine.
+      - uses: actions/checkout@v4
+        with:
+          repository: tpt-solutions/tpt-linux-sandbox
+          path: tpt-linux-sandbox
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tpt-privd
+      - run: cargo test --workspace
+        working-directory: tpt-privd
+      - run: cargo clippy --workspace --all-targets -- -D warnings
+        working-directory: tpt-privd
+
+  fmt:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: tpt-privd
+      - uses: actions/checkout@v4
+        with:
+          repository: tpt-solutions/tpt-linux-sandbox
+          path: tpt-linux-sandbox
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt
+      # -- (no --all): formats only this workspace's members, not the
+      # sibling path-dependency checkout.
+      - run: cargo fmt -- --check
+        working-directory: tpt-privd
+
+  deny:
+    name: cargo-deny
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: tpt-privd
+      - uses: actions/checkout@v4
+        with:
+          repository: tpt-solutions/tpt-linux-sandbox
+          path: tpt-linux-sandbox
+      - uses: EmbarkStudios/cargo-deny-action@v2
+        with:
+          arguments: --all-features
+          workdir: tpt-privd
+
+  msrv:
+    name: MSRV (1.85)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: tpt-privd
+      - uses: actions/checkout@v4
+        with:
+          repository: tpt-solutions/tpt-linux-sandbox
+          path: tpt-linux-sandbox
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.85"
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tpt-privd
+      - run: cargo check --workspace --all-targets
+        working-directory: tpt-privd
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: "-D warnings"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: tpt-privd
+      - uses: actions/checkout@v4
+        with:
+          repository: tpt-solutions/tpt-linux-sandbox
+          path: tpt-linux-sandbox
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tpt-privd
+      - run: cargo doc --workspace --no-deps
+        working-directory: tpt-privd
+
+  # I6: assert CapEff shrinks after drop_privileges in a root container.
+  # Closes the Phase 5 manual verification item where CI can.
+  caps-harness:
+    name: Caps harness (root Docker)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: tpt-privd
+      - uses: actions/checkout@v4
+        with:
+          repository: tpt-solutions/tpt-linux-sandbox
+          path: tpt-linux-sandbox
+      - name: Build harness image
+        run: |
+          docker build \
+            -f tpt-privd/packaging/Dockerfile.caps-harness \
+            -t tpt-privd-caps-harness:ci \
+            .
+      - name: Run caps_probe as root
+        run: docker run --rm tpt-privd-caps-harness:ci
+
+  # I4: ensure the optional otel feature still compiles.
+  otel-feature:
+    name: Feature otel
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: tpt-privd
+      - uses: actions/checkout@v4
+        with:
+          repository: tpt-solutions/tpt-linux-sandbox
+          path: tpt-linux-sandbox
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tpt-privd
+      - run: cargo check -p tpt-privd-daemon --features otel --all-targets
+        working-directory: tpt-privd
+

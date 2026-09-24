@@ -1,0 +1,57 @@
+name: Fuzz
+
+on:
+  schedule:
+    # Daily at 06:17 UTC — C5 optional scheduled fuzz.
+    - cron: "17 6 * * *"
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fuzz:
+    name: cargo-fuzz (decode)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: tpt-privd
+      - uses: actions/checkout@v4
+        with:
+          repository: tpt-solutions/tpt-linux-sandbox
+          path: tpt-linux-sandbox
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: rust-src
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tpt-privd
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+      - name: Fuzz decode (60s budget)
+        working-directory: tpt-privd/crates/tpt-privd-envelope
+        run: cargo fuzz run decode -- -max_total_time=60 -timeout=5
+
+  semver:
+    name: cargo-semver-checks
+    runs-on: ubuntu-latest
+    # Baseline is crates.io; first publish may report "no baseline" — keep
+    # non-blocking until 0.1.0 is released (C5).
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: tpt-privd
+      - uses: actions/checkout@v4
+        with:
+          repository: tpt-solutions/tpt-linux-sandbox
+          path: tpt-linux-sandbox
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: tpt-privd
+      - uses: obi1kenobi/cargo-semver-checks-action@v2
+        with:
+          path: tpt-privd
+          exclude: xtask

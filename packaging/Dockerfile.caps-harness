@@ -1,0 +1,17 @@
+# I6: capability-drop harness image (run as root).
+FROM rust:1.85-bookworm
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcap2-bin git pkg-config \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /workspace
+# Build context is the monorepo parent (tpt-privd + tpt-linux-sandbox).
+COPY tpt-linux-sandbox/ /workspace/tpt-linux-sandbox/
+COPY tpt-privd/ /workspace/tpt-privd/
+
+WORKDIR /workspace/tpt-privd
+RUN cargo build -p tpt-privd-daemon --example caps_probe
+
+# Default: run the probe as root (container default).
+CMD ["cargo", "run", "-q", "-p", "tpt-privd-daemon", "--example", "caps_probe"]

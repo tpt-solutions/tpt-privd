@@ -1,0 +1,22 @@
+[package]
+name = "tpt-privd-envelope-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+# Standalone package: not a member of the parent workspace (F22).
+[workspace]
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+tpt-privd-envelope = { path = ".." }
+
+[[bin]]
+name = "decode"
+path = "fuzz_targets/decode.rs"
+test = false
+doc = false
+bench = false

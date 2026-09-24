@@ -1,0 +1,33 @@
+[package]
+name = "tpt-privd-envelope"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Typed, versioned command envelope for tpt-privd — CBOR wire format"
+keywords = ["privd", "envelope", "cbor", "ipc", "daemon"]
+categories = ["encoding", "network-programming"]
+readme = "README.md"
+exclude = ["fuzz"]
+
+[package.metadata.docs.rs]
+all-features = true
+
+[lints]
+workspace = true
+
+[dependencies]
+serde.workspace = true
+ciborium.workspace = true
+thiserror.workspace = true
+
+[dev-dependencies]
+serde_json.workspace = true
+criterion.workspace = true
+
+[[bench]]
+name = "codec"
+harness = false

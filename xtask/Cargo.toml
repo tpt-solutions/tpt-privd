@@ -1,0 +1,18 @@
+[package]
+name = "xtask"
+version = "0.0.0"
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+publish = false
+description = "Dev task runner: gates, config schema, publish order (I9)"
+
+[lints]
+workspace = true
+
+[dependencies]
+# Intentionally empty: xtask only shells out via std::process::Command
+# so it stays dependency-free and MSRV-cheap.

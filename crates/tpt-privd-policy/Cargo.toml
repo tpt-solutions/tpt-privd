@@ -1,0 +1,23 @@
+[package]
+name = "tpt-privd-policy"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Per-command-type policy checks and CommandExecutor trait for tpt-privd"
+keywords = ["privd", "policy", "authorization", "daemon"]
+categories = ["os", "command-line-utilities"]
+readme = "README.md"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[lints]
+workspace = true
+
+[dependencies]
+tpt-privd-envelope.workspace = true
+thiserror.workspace = true

@@ -1,0 +1,16 @@
+# Consumer daemon config skeleton — see crates/tpt-privd-daemon/config.example.toml
+socket_path = "/run/tpt-privd/privd.sock"
+socket_mode = "0o660"
+audit_log_path = "/var/lib/tpt-privd/audit.jsonl"
+audit_key_path = "/var/lib/tpt-privd/audit.key"
+allowed_custom_kinds = [2147483648]
+
+[caps]
+drop_all = true
+keep = []
+
+[limits]
+max_frame_size = 1048576
+read_timeout_ms = 5000
+write_timeout_ms = 5000
+execute_timeout_ms = 30000

@@ -1,0 +1,62 @@
+[package]
+name = "tpt-privd-daemon"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Privileged command daemon: unprivileged socket in, audited privileged execution out"
+keywords = ["privd", "daemon", "privilege", "sandbox", "audit"]
+categories = ["os", "command-line-utilities"]
+readme = "README.md"
+
+[package.metadata.docs.rs]
+all-features = true
+
+[features]
+default = []
+# I4: OpenTelemetry export layered onto tracing (stdout exporter by default;
+# point OTEL_EXPORTER_OTLP_* at an agent when using OTLP in production).
+otel = [
+    "dep:tracing-opentelemetry",
+    "dep:opentelemetry",
+    "dep:opentelemetry_sdk",
+    "dep:opentelemetry-stdout",
+]
+
+[lints]
+workspace = true
+
+[dependencies]
+tpt-privd-envelope.workspace = true
+tpt-privd-transport.workspace = true
+tpt-privd-policy.workspace = true
+tpt-privd-audit.workspace = true
+tpt-privd-client.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+clap.workspace = true
+toml.workspace = true
+hex.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+schemars.workspace = true
+
+# Optional OpenTelemetry (I4) — only with `--features otel`.
+tracing-opentelemetry = { version = "0.28", optional = true }
+opentelemetry = { version = "0.27", optional = true }
+opentelemetry_sdk = { version = "0.27", optional = true, features = ["trace"] }
+opentelemetry-stdout = { version = "0.27", optional = true }
+
+# Capability dropping / sandboxing is Linux-only; the path dependency
+# resolves against the sibling tpt-linux-sandbox checkout.
+[target.'cfg(target_os = "linux")'.dependencies]
+tpt-l-sandbox = { path = "../../../tpt-linux-sandbox/crates/tpt-l-sandbox", version = "0.1.0" }
+
+[target.'cfg(unix)'.dev-dependencies]
+libc.workspace = true
+
+[dev-dependencies]

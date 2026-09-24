@@ -1,0 +1,29 @@
+[Unit]
+Description=TPT privileged command daemon
+Documentation=https://github.com/TPT-Solutions/tpt-privd
+# Prefer socket activation: enable tpt-privd.socket instead of starting
+# this unit directly (packaging/tpt-privd.socket).
+After=network.target tpt-privd.socket
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/tpt-privd-daemon --config /etc/tpt-privd/config.toml
+Restart=on-failure
+RestartSec=2
+# Hardening — in-process capability drop still runs via tpt-l-sandbox.
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/tpt-privd
+CapabilityBoundingSet=CAP_NET_ADMIN
+AmbientCapabilities=CAP_NET_ADMIN
+RestrictAddressFamilies=AF_UNIX
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+# I11: RUST_LOG overrides the built-in default (info).
+# Environment=RUST_LOG=debug
+
+[Install]
+WantedBy=multi-user.target
+# Prefer: systemctl enable --now tpt-privd.socket

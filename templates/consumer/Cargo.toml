@@ -1,0 +1,14 @@
+# Consumer daemon skeleton — copy into a new repo / cargo-generate template.
+[package]
+name = "tpt-privd-consumer"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+publish = false
+
+[dependencies]
+# Prefer published crates once available; git deps for early adoption —
+# see README.md.
+tpt-privd-envelope = { git = "https://github.com/TPT-Solutions/tpt-privd" }
+tpt-privd-policy = { git = "https://github.com/TPT-Solutions/tpt-privd" }
+tpt-privd-daemon = { git = "https://github.com/TPT-Solutions/tpt-privd" }
