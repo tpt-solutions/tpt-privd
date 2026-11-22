@@ -68,7 +68,7 @@ jobs:
       - uses: EmbarkStudios/cargo-deny-action@v2
         with:
           arguments: --all-features
-          workdir: tpt-privd
+          manifest-path: tpt-privd/Cargo.toml
 
   msrv:
     name: MSRV (1.85)

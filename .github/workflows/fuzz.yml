@@ -13,6 +13,11 @@ jobs:
   fuzz:
     name: cargo-fuzz (decode)
     runs-on: ubuntu-latest
+    env:
+      # The repo's rust-toolchain.toml pins `stable`, and rustup prefers that
+      # file over the default toolchain installed below. cargo-fuzz passes
+      # -Zsanitizer flags, which only nightly accepts, so force nightly here.
+      RUSTUP_TOOLCHAIN: nightly
     steps:
       - uses: actions/checkout@v4
         with:
@@ -53,5 +58,7 @@ jobs:
           workspaces: tpt-privd
       - uses: obi1kenobi/cargo-semver-checks-action@v2
         with:
-          path: tpt-privd
+          # The action runs from $GITHUB_WORKSPACE, which holds the two
+          # checkouts side by side and no Cargo.toml, so point at the manifest.
+          manifest-path: tpt-privd/Cargo.toml
           exclude: xtask
