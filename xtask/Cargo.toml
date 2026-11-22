@@ -9,6 +9,9 @@ repository.workspace = true
 homepage.workspace = true
 publish = false
 description = "Dev task runner: gates, config schema, publish order (I9)"
+keywords = ["xtask", "ci", "gates", "packaging", "tooling"]
+categories = ["development-tools"]
+readme = "README.md"
 
 [lints]
 workspace = true
