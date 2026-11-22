@@ -27,6 +27,18 @@ The wire envelope carries an explicit `version: u32` field, currently
 
 ## [Unreleased]
 
+### Changed
+
+- Each crate now has its own `README.md` and `CHANGELOG.md`, and its
+  `Cargo.toml` declares `keywords`, `categories`, and `readme`.
+- `CONTRIBUTING.md` now states that contributions are accepted through
+  GitHub issues only.
+
+### Removed
+
+- `SECURITY.md`. Security reports are handled through the issue tracker
+  as described in `CONTRIBUTING.md`.
+
 ### Added
 
 - Workspace bootstrap: dual MIT/Apache-2.0 license metadata, rustfmt,

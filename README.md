@@ -33,14 +33,18 @@ Each consumer repo layers its own `CommandKind` values and policy on top.
 Split into six crates rather than one flat package, so consumers can depend
 on only the envelope (for wire compatibility) without pulling in the daemon:
 
-| Crate | Role |
-|---|---|
-| `tpt-privd-envelope` | `Command` / `CommandResult` types, CBOR codec, version gate |
-| `tpt-privd-transport` | Length-prefixed framing + Unix socket listener/client + `SO_PEERCRED` |
-| `tpt-privd-policy` | `CommandExecutor` trait, `PolicyViolation`, `MockExecutor` |
-| `tpt-privd-audit` | Append-only JSONL log, SHA-256 hash chain, Ed25519 per-record signatures |
-| `tpt-privd-client` | Thin client: connect, send one `Command`, read one `CommandResult` |
-| `tpt-privd-daemon` | Binary (and lib): config, wiring, capability drop, accept loop |
+| Crate | Role | Docs |
+|---|---|---|
+| [`tpt-privd-envelope`](crates/tpt-privd-envelope/README.md) | `Command` / `CommandResult` types, CBOR codec, version gate | [CHANGELOG](crates/tpt-privd-envelope/CHANGELOG.md) |
+| [`tpt-privd-transport`](crates/tpt-privd-transport/README.md) | Length-prefixed framing + Unix socket listener/client + `SO_PEERCRED` | [CHANGELOG](crates/tpt-privd-transport/CHANGELOG.md) |
+| [`tpt-privd-policy`](crates/tpt-privd-policy/README.md) | `CommandExecutor` trait, `PolicyViolation`, `MockExecutor` | [CHANGELOG](crates/tpt-privd-policy/CHANGELOG.md) |
+| [`tpt-privd-audit`](crates/tpt-privd-audit/README.md) | Append-only JSONL log, SHA-256 hash chain, Ed25519 per-record signatures | [CHANGELOG](crates/tpt-privd-audit/CHANGELOG.md) |
+| [`tpt-privd-client`](crates/tpt-privd-client/README.md) | Thin client: connect, send one `Command`, read one `CommandResult` | [CHANGELOG](crates/tpt-privd-client/CHANGELOG.md) |
+| [`tpt-privd-daemon`](crates/tpt-privd-daemon/README.md) | Binary (and lib): config, wiring, capability drop, accept loop | [CHANGELOG](crates/tpt-privd-daemon/CHANGELOG.md) |
+
+Each crate has its own README (usage, API overview, platform notes) and
+CHANGELOG. The repository [CHANGELOG](CHANGELOG.md) covers workspace-level
+changes and the wire-format versioning policy.
 
 Rationale for the split (recorded before Phase 1 per the checklist):
 envelope and audit are independently reusable (a consumer might verify an
