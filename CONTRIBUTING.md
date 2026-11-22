@@ -1,80 +1,43 @@
 # Contributing to tpt-privd
 
-## Development layout
+Contributions to `tpt-privd` are accepted **through GitHub issues only**.
+Please do not open pull requests; they will not be reviewed or merged.
 
-`tpt-privd` depends on the sibling `tpt-linux-sandbox` workspace via a
-path dependency. Clone them as neighbors:
+## Reporting a bug
 
-```text
-parent/
-  tpt-privd/
-  tpt-linux-sandbox/   # provides crates/tpt-l-sandbox
-```
+Open a [new issue](https://github.com/TPT-Solutions/tpt-privd/issues/new)
+and include:
 
-CI does the same (`actions/checkout` with `path: tpt-privd` and
-`path: tpt-linux-sandbox`). Do not change the path without updating
-both `Cargo.toml` and `.github/workflows/ci.yml`.
+- The crate and version (or commit hash) you are running.
+- Your OS and kernel. Note whether you are on Linux, since capability
+  dropping and `SO_PEERCRED` are Linux-only.
+- The exact command, config, or code that reproduces the problem.
+- What you expected to happen, and what happened instead. Include the
+  relevant output or log lines.
 
-Full socket / privilege-drop paths require Unix; capability drop is
-Linux-only. Windows is supported for library tests and the scoped
-gates below (Unix-gated integration tests are `#![cfg(unix)]`).
+## Requesting a feature
 
-## Local gates (must be green before a PR)
+Open an issue describing the problem you are trying to solve, not only
+the change you have in mind. Explain who is affected and how the
+behaviour fits the design in [`spec.txt`](spec.txt) and
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
-Always run these from the repo root. **Never** use `cargo fmt --all`
-(it formats the sibling checkout too) — scope to this workspace:
+## Questions
 
-```sh
-cargo test --workspace
-cargo clippy --workspace --all-targets -- -D warnings
-cargo clippy -p tpt-privd-daemon --features otel --all-targets -- -D warnings
-cargo fmt -p tpt-privd-envelope -p tpt-privd-transport \
-  -p tpt-privd-policy -p tpt-privd-audit -p tpt-privd-client \
-  -p tpt-privd-daemon -p xtask -- --check
-cargo deny --all-features check
-RUSTDOCFLAGS="-D warnings" cargo doc --workspace --no-deps
-```
+Usage questions also go in issues. Label them as questions in the title
+so they are easy to find.
 
-`cargo deny` may print `wildcards` / unresolved-workspace-dependency
-**warnings** for the sibling path dep; those are expected (`warn` in
-`deny.toml`). Advisories, bans, licenses, and sources must be `ok`.
+## Security
 
-## Checklist for PRs
+Security concerns are also reported as issues. Prefix the title with
+`[SECURITY]` and leave out exploit details, reproduction steps, and
+anything else that would help an attacker. Describe the affected
+component and the class of problem (for example, privilege escalation
+or audit-chain integrity) and the maintainers will take it from there.
 
-- [ ] All four gates above green locally (or CI green on the PR).
-- [ ] `cargo fmt` applied to the six packages (not `--all`).
-- [ ] Public API changes documented in `CHANGELOG.md`.
-- [ ] Security-relevant changes: note threat model impact in the PR
-      description; see `SECURITY.md`.
-- [ ] Finding IDs in `todo.md` (`F#`/`L#`/`A#`/`C#`) are stable — do
-      not renumber; add new ids instead.
+## Project policies
 
-## Style
-
-- Edition 2024, MSRV **1.85**.
-- `missing_docs` is denied workspace-wide; document every public item.
-- Prefer `#[non_exhaustive]`-free open enums where CBOR stability
-  matters (`CommandKind`, `ErrorCode` already follow the documented
-  extension story).
-- No drive-by refactors in bugfix PRs.
-
-## Releases / publish order
-
-See `docs/DEPLOYMENT.md` § Publish order. Blocker: `tpt-l-sandbox`
-must be on crates.io (or the path dep feature-gated) before
-`tpt-privd-daemon` can publish.
-
-## Fuzzing
-
-From `crates/tpt-privd-envelope/fuzz/` (nightly + cargo-fuzz):
-
-```sh
-cargo +nightly fuzz run decode
-```
-
-The fuzz package is a standalone workspace (`[workspace]` table) and is
-`exclude`d from the root members list so `cargo fuzz` works.
-
-## Security reports
-
-See `SECURITY.md` — do not file public issues for vulnerabilities.
+- Licensing: by filing an issue you agree that any code you share in
+  it may be used under the project's dual license (MIT OR Apache-2.0).
+- Behaviour: be respectful and keep discussion on the technical
+  question.

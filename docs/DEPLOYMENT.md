@@ -203,7 +203,8 @@ tpt-privd-daemon verify-audit /var/lib/tpt-privd/audit.jsonl \
 ```
 
 Wire this into a timer or log-shipping job. A FAIL means the chain or
-a signature broke — treat as a security event (`SECURITY.md`).
+a signature broke — treat as a security event. See
+`crates/tpt-privd-audit/README.md` for the verification model.
 
 ## Smoke client
 

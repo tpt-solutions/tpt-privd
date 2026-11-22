@@ -186,7 +186,6 @@ fn packaging_check() -> ExitCode {
         "crates/tpt-privd-daemon/config.example.toml",
         "crates/tpt-privd-daemon/examples/caps_probe.rs",
         "docs/DEPLOYMENT.md",
-        "SECURITY.md",
         "CHANGELOG.md",
         "flake.nix",
     ];

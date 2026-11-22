@@ -11,8 +11,8 @@ capabilities before accepting a single connection.
 **Design spec:** [`spec.txt`](spec.txt) · **Architecture (as-built):**
 [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) · **Deployment:**
 [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) · **Checklist:**
-[`todo.md`](todo.md) · **Security:** [`SECURITY.md`](SECURITY.md) ·
-**Contributing:** [`CONTRIBUTING.md`](CONTRIBUTING.md)
+[`todo.md`](todo.md) · **Changelog:** [`CHANGELOG.md`](CHANGELOG.md) ·
+**Contributing:** [`CONTRIBUTING.md`](CONTRIBUTING.md) (issues only)
 
 ---
 
