@@ -19,10 +19,10 @@ jobs:
       # -Zsanitizer flags, which only nightly accepts, so force nightly here.
       RUSTUP_TOOLCHAIN: nightly
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: tpt-privd
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: tpt-solutions/tpt-linux-sandbox
           path: tpt-linux-sandbox
@@ -45,10 +45,10 @@ jobs:
     # non-blocking until 0.1.0 is released (C5).
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: tpt-privd
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: tpt-solutions/tpt-linux-sandbox
           path: tpt-linux-sandbox

@@ -14,13 +14,13 @@ jobs:
     name: Test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: tpt-privd
       # tpt-privd depends on tpt-linux-sandbox via a sibling path
       # dependency (crates/tpt-privd-daemon). Check it out next to us so
       # the path resolves the same way it does on a developer machine.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: tpt-solutions/tpt-linux-sandbox
           path: tpt-linux-sandbox
@@ -39,10 +39,10 @@ jobs:
     name: Format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: tpt-privd
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: tpt-solutions/tpt-linux-sandbox
           path: tpt-linux-sandbox
@@ -58,10 +58,10 @@ jobs:
     name: cargo-deny
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: tpt-privd
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: tpt-solutions/tpt-linux-sandbox
           path: tpt-linux-sandbox
@@ -74,10 +74,10 @@ jobs:
     name: MSRV (1.85)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: tpt-privd
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: tpt-solutions/tpt-linux-sandbox
           path: tpt-linux-sandbox
@@ -96,10 +96,10 @@ jobs:
     env:
       RUSTDOCFLAGS: "-D warnings"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: tpt-privd
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: tpt-solutions/tpt-linux-sandbox
           path: tpt-linux-sandbox
@@ -116,10 +116,10 @@ jobs:
     name: Caps harness (root Docker)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: tpt-privd
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: tpt-solutions/tpt-linux-sandbox
           path: tpt-linux-sandbox
@@ -137,10 +137,10 @@ jobs:
     name: Feature otel
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           path: tpt-privd
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           repository: tpt-solutions/tpt-linux-sandbox
           path: tpt-linux-sandbox
