@@ -54,7 +54,7 @@ opentelemetry-stdout = { version = "0.27", optional = true }
 # Capability dropping / sandboxing is Linux-only; the path dependency
 # resolves against the sibling tpt-linux-sandbox checkout.
 [target.'cfg(target_os = "linux")'.dependencies]
-tpt-l-sandbox = { path = "../../../tpt-linux-sandbox/crates/tpt-l-sandbox", version = "0.1.0" }
+tpt-l-sandbox = { path = "../../../tpt-linux-sandbox/tpt-l-sandbox", version = "0.1.0" }
 
 [target.'cfg(unix)'.dev-dependencies]
 libc.workspace = true

@@ -182,7 +182,7 @@ dependency. Clone the two repositories side by side:
 ```text
 parent/
   tpt-privd/
-  tpt-linux-sandbox/   # provides crates/tpt-l-sandbox
+  tpt-linux-sandbox/   # provides tpt-l-sandbox/ at the repo root
 ```
 
 CI does the same. Do not change the path without updating both the
